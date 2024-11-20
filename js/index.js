@@ -1,7 +1,8 @@
+
 /**
  * Crea el DOM para el formulario
  */
-function const_form() {
+function construc_form() {
     let form = document.querySelector("#datos");
 
     let titulos = [
@@ -59,8 +60,9 @@ function const_form() {
 
     form.append(contenedor);
 
-    // Input <select> para tipo de incidencia
+    // Input tipo radio para prioridad
     contenedor = document.createElement("div");
+    contenedor.setAttribute("id", "Prioridad");
     span = document.createElement("span");
     span.append("Prioridad: ");
     contenedor.append(span);
@@ -71,6 +73,7 @@ function const_form() {
         input.setAttribute("type", "radio");
         input.setAttribute("name", "Prioridad");
         input.setAttribute("id", prioridad[i]);
+        input.setAttribute("value", prioridad[i]);
         aux.append(prioridad[i]);
         contenedor.append(input, aux);
     }
@@ -107,7 +110,7 @@ function constructor() {
     form.setAttribute("id", "datos");
     body.insertBefore(form, primerEnlace);
 
-    const_form();
+    construc_form();
 }
 
 
