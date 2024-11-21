@@ -97,6 +97,65 @@ function construc_form() {
 }
 
 
+/**
+ * Pinta la tabla con las incidencias
+ */
+function pintaTabla() {
+    let incidencias = localStorage.getItem("incidencias");
+    
+    if (incidencias!=null) {
+        incidencias = JSON.parse(incidencias);
+    }
+
+    let tablaOld = document.querySelector("#tabla-incidencias");
+    if (tablaOld!=null) {
+        tablaOld.remove();
+    }
+
+    let body = document.querySelector("body");
+    let primerEnlace = document.querySelector("#indexJS");
+    let tabla = document.createElement("table");
+    tabla.setAttribute("id", "tabla-incidencias");
+    let cabecera = document.createElement("tr");
+    let titulos = [
+        "Fecha Creación", 
+        "Usuario", 
+        "Teléfono", 
+        "Correo", 
+        "Responsable", 
+        "Tipo", 
+        "Prioridad", 
+        "Estado",
+        "Observaciones",
+        "Tiempo Resol."
+    ];
+
+    // Crea las cabeceras de la tabla partiendo del array "titulos"
+    titulos.forEach((x) => {
+        let th = document.createElement("th");
+        th.append(x);
+        cabecera.append(th);
+    });
+
+    body.insertBefore(tabla, primerEnlace);
+    tabla.append(cabecera);
+
+
+    if (incidencias!=null) {
+        incidencias.forEach((x)=>{ // Recorre el array de incidencias
+            fila = document.createElement("tr");
+    
+            Object.values(x).forEach((value)=>{ // Por cada objeto del array, añade uno a uno cada valor a una columna de la tabla
+                let td = document.createElement("td");
+                td.append(value);
+                fila.append(td);
+            });
+    
+            tabla.append(fila);
+        });
+    }
+
+}
 
 
 /**
@@ -111,6 +170,8 @@ function constructor() {
     body.insertBefore(form, primerEnlace);
 
     construc_form();
+    pintaTabla();
+    // localStorage.removeItem("incidencias");
 }
 
 

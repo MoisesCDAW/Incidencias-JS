@@ -1,6 +1,4 @@
 
-
-
 /**
  * Objeto que guarda el tiempo límite en horas de resolución para cada nivel de prioridad
  */
@@ -24,31 +22,38 @@ const estados = [
 /**
  * Pinta la tabla con las incidencias
  */
-function pintaTabla(incidencia) {
-    let tabla = document.createElement("table");
-    let cabecera = document.createElement("tr");
-    let titulos = [
-        "Fecha Creación", 
-        "Usuario", 
-        "Teléfono", 
-        "Correo", 
-        "Responsable", 
-        "Tipo", 
-        "Prioridad", 
-        "Estado",
-        "Observaciones"
-    ];
+function crearFila(incidencia) {
+    let tabla = document.querySelector("#tabla-incidencias");
+    let fila = document.createElement("tr");
 
-    titulos.forEach((x) => {
-        let th = document.createElement("th");
-        th.append(x);
-        cabecera.append(th);
+    // Agrega cada atributo del objeto a una columna de la nueva fila de la tabla
+    Object.values(incidencia).forEach((value)=>{
+        let td = document.createElement("td");
+        td.append(value);
+        fila.append(td);
     });
 
-    document.querySelector("body").insertBefore(tabla, document.querySelector("#indexJS"));
-    tabla.append(cabecera);
-
+    tabla.append(fila);
 }
+
+
+/**
+ * Guarda la nueva incidencia en LocalStorage
+ */
+function guardarIncidencia(incidencia) {
+    let incidencias = localStorage.getItem("incidencias");
+
+    if (incidencias==null) {
+        incidencias = [];      
+    }else {
+        incidencias = JSON.parse(incidencias);
+        
+    }
+
+    incidencias.push(incidencia);
+    localStorage.setItem("incidencias", JSON.stringify(incidencias));
+}
+
 
 
 /**
@@ -56,21 +61,33 @@ function pintaTabla(incidencia) {
  */
 function crearIncidencia() {
     let incidencia = {
-        fechaCreacion: Date(),
-        nombre: document.querySelector("#Usuario"),
-        telefono: document.querySelector("#Telefono"),
-        email: document.querySelector("#Email"),
+        fechaCreacion: "null",
+        nombre: document.querySelector("#Usuario").value,
+        telefono: document.querySelector("#Telefono").value,
+        email: document.querySelector("#Email").value,
         responsable: "Sin asignar",
-        tipo: document.querySelector("#Tipo"),
-        prioridad: "",
+        tipo: document.querySelector("#Tipo").value,
+        prioridad: "null",
         estado: estados[0], // Tramitada
-        observaciones: document.querySelector("#Observaciones"),
-        limiteResol: ""
+        observaciones: document.querySelector("#Observaciones").value,
+        tiempoResol: "..."
     };
 
-    let prioridad;
+    
+
+    // Formatea un objeto Date
+    let date = new Date();
+    let format = date.getDate() + "/" + date.getMonth() + "/" + date.getFullYear();
+    
+    date.getHours()<10 ? format += " 0" + date.getHours() : format += " " + date.getHours();
+    date.getMinutes()<10 ? format += ":0" + date.getHours() : format += ":" + date.getMinutes();
+    date.getSeconds()<10 ? format += ":0" + date.getSeconds() : format += ":" + date.getSeconds();
+
+    incidencia.fechaCreacion = format;
+
 
     // Busca el radio que está checked
+    let prioridad;
     let radios = document.querySelector("#Prioridad").querySelectorAll("input");
     radios.forEach((x)=>{
         if (x.checked) {
@@ -79,24 +96,7 @@ function crearIncidencia() {
         }
     });
 
-    // Asigna límite de tiempo de resolución según su prioridad
-    switch (prioridad) {
-        case "Urgente":
-            incidencia.limiteResol = tiempoLimite.urgente; // 24 h
-            break;
-
-        case "Media":
-            incidencia.limiteResol = tiempoLimite.media; // 48 h
-            break;
-
-        case "Baja":
-            incidencia.limiteResol = tiempoLimite.baja; // 168 h
-            break;
-    
-        default:
-            break;
-    }
-
+    guardarIncidencia(incidencia);
     return incidencia;
 }
 
@@ -114,7 +114,8 @@ function validarDatos() {
         }
     });
 
-    pintaTabla(crearIncidencia());
+    // crearIncidencia();
+    crearFila(crearIncidencia());
 
     // if (!valido) {
     //     alert("Todavía hay datos vacíos");
