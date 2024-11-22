@@ -20,6 +20,25 @@ const estados = [
 
 
 /**
+ * Crea los botones para una fila y le asigna los eventos
+ */
+function crearBotones(fila) {
+    let enProceso = document.createElement("button");
+    let terminada = document.createElement("button");
+
+    enProceso.setAttribute("id", "en-proceso");
+    terminada.setAttribute("id", "terminada");
+
+    enProceso.append("En proceso");
+    terminada.append("Terminada");
+
+    fila.append(enProceso, terminada);
+
+    return fila;
+}
+
+
+/**
  * Pinta la tabla con las incidencias
  */
 function crearFila(incidencia) {
@@ -33,6 +52,7 @@ function crearFila(incidencia) {
         fila.append(td);
     });
 
+    crearBotones(fila);
     tabla.append(fila);
 }
 
@@ -42,12 +62,12 @@ function crearFila(incidencia) {
  */
 function guardarIncidencia(incidencia) {
     let incidencias = localStorage.getItem("incidencias");
-
+    
     if (incidencias==null) {
+        console.log(incidencias);
         incidencias = [];      
     }else {
-        incidencias = JSON.parse(incidencias);
-        
+        incidencias = JSON.parse(incidencias); 
     }
 
     incidencias.push(incidencia);
@@ -70,7 +90,6 @@ function crearIncidencia() {
         prioridad: "null",
         estado: estados[0], // Tramitada
         observaciones: document.querySelector("#Observaciones").value,
-        tiempoResol: "..."
     };
 
     
@@ -114,14 +133,11 @@ function validarDatos() {
         }
     });
 
-    // crearIncidencia();
-    crearFila(crearIncidencia());
-
-    // if (!valido) {
-    //     alert("Todavía hay datos vacíos");
-    // }else {
-    //     pintaTabla(crearIncidencia());
-    // }
+    if (!valido) {
+        alert("Todavía hay datos vacíos");
+    }else {
+        crearFila(crearIncidencia());
+    }
 }
 
 

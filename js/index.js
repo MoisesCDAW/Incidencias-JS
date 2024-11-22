@@ -98,15 +98,62 @@ function construc_form() {
 
 
 /**
+ * Crea los botones para una fila y le asigna los eventos
+ */
+function crearBotones(fila) {
+    let enProceso = document.createElement("button");
+    let terminada = document.createElement("button");
+
+    enProceso.append("En proceso");
+    terminada.append("Finalizada");
+
+    enProceso.addEventListener("click", ()=>{
+
+        let aux = fila.querySelectorAll("td");
+        aux.forEach((x)=>{
+            if (x.childNodes[0].nodeValue=="Tramitada") {
+                x.childNodes[0].nodeValue = "En Proceso";
+            }
+            
+        });
+
+        enProceso.setAttribute("disabled", "disabled");
+    });
+
+    terminada.addEventListener("click", ()=>{
+
+        let aux = fila.querySelectorAll("td");
+        aux.forEach((x)=>{
+            if (x.childNodes[0].nodeValue=="En Proceso" || x.childNodes[0].nodeValue=="Tramitada") {
+                x.childNodes[0].nodeValue = "Finalizada";
+            }
+            
+        });
+
+        fila.style.backgroundColor = "blue";
+        enProceso.setAttribute("disabled", "disabled");
+        terminada.setAttribute("disabled", "disabled");
+    });
+
+    fila.append(enProceso, terminada);
+
+    return fila;
+}
+
+
+/**
  * Pinta la tabla con las incidencias
  */
 function pintaTabla() {
     let incidencias = localStorage.getItem("incidencias");
-    
-    if (incidencias!=null) {
-        incidencias = JSON.parse(incidencias);
+
+    if (incidencias==null) {
+        incidencias = [];      
+    }else {
+        incidencias = JSON.parse(incidencias); 
     }
 
+    // Evita que la tabla se imprima varias veces
     let tablaOld = document.querySelector("#tabla-incidencias");
     if (tablaOld!=null) {
         tablaOld.remove();
@@ -126,8 +173,7 @@ function pintaTabla() {
         "Tipo", 
         "Prioridad", 
         "Estado",
-        "Observaciones",
-        "Tiempo Resol."
+        "Observaciones"
     ];
 
     // Crea las cabeceras de la tabla partiendo del array "titulos"
@@ -142,18 +188,34 @@ function pintaTabla() {
 
 
     if (incidencias!=null) {
-        incidencias.forEach((x)=>{ // Recorre el array de incidencias
+
+        // Recorre el array de incidencias para imprimir cada incidencia
+        incidencias.forEach((incidencia)=>{ 
             fila = document.createElement("tr");
     
-            Object.values(x).forEach((value)=>{ // Por cada objeto del array, añade uno a uno cada valor a una columna de la tabla
+            Object.values(incidencia).forEach((value)=>{ // Por cada objeto del array, añade uno a uno cada valor a una columna de la tabla
                 let td = document.createElement("td");
                 td.append(value);
                 fila.append(td);
             });
-    
+
+            fila.style.color = "white";
+
+            if (incidencia.prioridad=="Baja") {
+                fila.style.backgroundColor = "green";
+                
+            }else if(incidencia.prioridad=="Media"){
+                fila.style.backgroundColor = "orange";
+            }else {
+                fila.style.backgroundColor = "red";
+            }
+
+            fila = crearBotones(fila);  
             tabla.append(fila);
         });
     }
+
+    localStorage.setItem("incidencias", JSON.stringify(incidencias));
 
 }
 
