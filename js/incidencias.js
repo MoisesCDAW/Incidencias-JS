@@ -10,57 +10,9 @@ const tiempoLimite = {
 
 
 /**
- * Array con los diferente estados que puede tener una incidencia
- */
-const estados = [
-    "Tramitada",
-    "En proceso",
-    "resuelta"
-];
-
-
-/**
- * Crea los botones para una fila y le asigna los eventos
- */
-function crearBotones(fila) {
-    let enProceso = document.createElement("button");
-    let terminada = document.createElement("button");
-
-    enProceso.setAttribute("id", "en-proceso");
-    terminada.setAttribute("id", "terminada");
-
-    enProceso.append("En proceso");
-    terminada.append("Terminada");
-
-    fila.append(enProceso, terminada);
-
-    return fila;
-}
-
-
-/**
- * Pinta la tabla con las incidencias
- */
-function crearFila(incidencia) {
-    let tabla = document.querySelector("#tabla-incidencias");
-    let fila = document.createElement("tr");
-
-    // Agrega cada atributo del objeto a una columna de la nueva fila de la tabla
-    Object.values(incidencia).forEach((value)=>{
-        let td = document.createElement("td");
-        td.append(value);
-        fila.append(td);
-    });
-
-    crearBotones(fila);
-    tabla.append(fila);
-}
-
-
-/**
  * Guarda la nueva incidencia en LocalStorage
  */
-function guardarIncidencia(incidencia) {
+export function guardarIncidencia(incidencia, posicion=null, nuevoEstado) {
     let incidencias = localStorage.getItem("incidencias");
     
     if (incidencias==null) {
@@ -70,16 +22,132 @@ function guardarIncidencia(incidencia) {
         incidencias = JSON.parse(incidencias); 
     }
 
-    incidencias.push(incidencia);
+    if (posicion!=null) {
+        posicion-=1; // -1 porque la posición son los ID de cada fila y comienzan por 1, con arrays hay que empezar en 0
+        let actualizada = incidencias[posicion].estado=nuevoEstado;
+        incidencias.slice(posicion, posicion, actualizada);
+    }else {
+        incidencias.push(incidencia);
+    }
+
     localStorage.setItem("incidencias", JSON.stringify(incidencias));
+
 }
 
+
+/**
+ * Pinta los fondos de cada fila según su nivel de prioridad
+ * También se encarga de, según el estaado, desactivar botones
+ */
+function pintaFondos(fila, incidencia) {
+    let enProceso = fila.querySelector("#en-proceso");
+    let finalizada = fila.querySelector("#finalizada");
+
+
+    if (incidencia.estado=="En Proceso") {
+        enProceso.setAttribute("disabled", "disabled");
+    }
+
+    fila.style.color = "white";
+    if (incidencia.estado=="Finalizada") {
+        enProceso.setAttribute("disabled", "disabled");
+        finalizada.setAttribute("disabled", "disabled");
+        fila.style.backgroundColor = "blue";
+    }else {
+        if (incidencia.prioridad=="Baja") {
+            fila.style.backgroundColor = "green";
+            
+        }else if(incidencia.prioridad=="Media"){
+            fila.style.backgroundColor = "orange";
+        }else {
+            fila.style.backgroundColor = "red";
+        }
+    }
+
+    return fila;
+}
+
+
+/**
+ * Crea los botones para una fila y le asigna los eventos
+ */
+export function crearBotones(fila) {
+    let enProceso = document.createElement("button");
+    let finalizada = document.createElement("button");
+
+    enProceso.setAttribute("id", "en-proceso");
+    finalizada.setAttribute("id", "finalizada");
+
+    // Asigna el texto a mostrar de los botones
+    enProceso.append("En proceso");
+    finalizada.append("Finalizada");
+
+    enProceso.addEventListener("click", ()=>{
+        let aux = fila.querySelectorAll("td");
+        aux.forEach((x)=>{
+            if (x.childNodes[0].nodeValue=="Tramitada") {
+                x.childNodes[0].nodeValue = "En Proceso";
+                guardarIncidencia(null, fila.id, "En Proceso");
+            }
+            
+        });
+
+        enProceso.setAttribute("disabled", "disabled");
+    });
+
+    finalizada.addEventListener("click", ()=>{
+
+        let aux = fila.querySelectorAll("td");
+        aux.forEach((x)=>{
+            if (x.childNodes[0].nodeValue=="En Proceso" || x.childNodes[0].nodeValue=="Tramitada") {
+                x.childNodes[0].nodeValue = "Finalizada";
+                guardarIncidencia(null, fila.id, "Finalizada");
+            }
+        });
+
+        fila.style.backgroundColor = "blue";
+        enProceso.setAttribute("disabled", "disabled");
+        finalizada.setAttribute("disabled", "disabled");
+    });
+
+    fila.append(enProceso, finalizada);
+
+    return fila;
+}
+
+
+/**
+ * Pinta la tabla con las incidencias
+ */
+export function crearFila(incidencia) {
+    let ID = null;
+    let tabla = document.querySelector("#tabla-incidencias");
+    let ultimaFila = Array.from(tabla.querySelectorAll("tr"));
+    ultimaFila = ultimaFila[ultimaFila.length-1];
+    
+    ID = Number(ultimaFila.id)+1;
+
+    let fila = document.createElement("tr");
+    fila.setAttribute("id", ID);
+
+    // Agrega cada atributo del objeto a una columna de la nueva fila de la tabla
+    Object.values(incidencia).forEach((value)=>{
+        let td = document.createElement("td");
+        td.append(value);
+        fila.append(td);
+    });
+
+    fila = crearBotones(fila);
+    fila = pintaFondos(fila, incidencia);
+
+    tabla.append(fila);
+}
 
 
 /**
  * Crea un objeto con toda la información de la incidencia
  */
-function crearIncidencia() {
+export function crearIncidencia() {
     let incidencia = {
         fechaCreacion: "null",
         nombre: document.querySelector("#Usuario").value,
@@ -88,7 +156,7 @@ function crearIncidencia() {
         responsable: "Sin asignar",
         tipo: document.querySelector("#Tipo").value,
         prioridad: "null",
-        estado: estados[0], // Tramitada
+        estado: "Tramitada",
         observaciones: document.querySelector("#Observaciones").value,
     };
 
@@ -118,7 +186,6 @@ function crearIncidencia() {
     guardarIncidencia(incidencia);
     return incidencia;
 }
-
 
 
 /**
@@ -154,7 +221,185 @@ function eventos() {
     });
 
     document.querySelector("#Enviar").addEventListener("click", validarDatos);
-    // document.querySelector("#Enviar").addEventListener("click", crearIncidencia);
+    document.querySelector("#Borrar").addEventListener("click", ()=>{
+        localStorage.removeItem("incidencias");
+        location.reload();
+    });
 }
 
-eventos();
+
+/**
+ * Crea el DOM para el formulario
+ */
+export function construc_form() {
+    let form = document.querySelector("#datos");
+
+    let titulos = [
+        ["Usuario", "Nombre de usuario"], 
+        ["Telefono", "Télefono de contacto"],
+        ["Email", "Email de contacto"], 
+    ];
+
+    let tiposIncidencia = [
+        "Hardware",
+        "Software",
+        "Solicitud de nuevos servicios",
+        "Resolución de dudas"
+    ];
+
+    let prioridad = [
+        "Baja",
+        "Media",
+        "Urgente"
+    ];
+    
+    let contenedor = "";
+    let span = ""; 
+    let textArea = document.createElement("textarea");
+    let select = document.createElement("select");
+    let enviar = document.createElement("button");
+    let borrar = document.createElement("button");
+
+    // Bloque para crear inputs tipo text con su <span>
+    for (let i = 0; i < titulos.length; i++) {
+        let contenedor = document.createElement("div");
+        let input = document.createElement("input");
+        let span = document.createElement("span");
+
+        span.append(titulos[i][1]);
+        input.setAttribute("id", titulos[i][0]);
+        input.setAttribute("type", "text");
+
+        contenedor.append(span, input);
+        form.append(contenedor);
+    }
+
+
+    // Input <select> para tipo de incidencia
+    contenedor = document.createElement("div");
+    span = document.createElement("span");
+    span.append("Tipo de incidencia");
+    select.setAttribute("id", "Tipo");
+    contenedor.append(span, select);
+
+    for (let i = 0; i < tiposIncidencia.length; i++) {
+        let opcion = document.createElement("option");
+        opcion.append(tiposIncidencia[i]);
+        select.append(opcion);
+    }
+
+    form.append(contenedor);
+
+    // Input tipo radio para prioridad
+    contenedor = document.createElement("div");
+    contenedor.setAttribute("id", "Prioridad");
+    span = document.createElement("span");
+    span.append("Prioridad: ");
+    contenedor.append(span);
+
+    for (let i = 0; i < prioridad.length; i++) {
+        let input = document.createElement("input");
+        let aux = document.createElement("span");
+        input.setAttribute("type", "radio");
+        input.setAttribute("name", "Prioridad");
+        input.setAttribute("id", prioridad[i]);
+        input.setAttribute("value", prioridad[i]);
+        aux.append(prioridad[i]);
+        contenedor.append(input, aux);
+    }
+
+    form.append(contenedor);
+
+    // Input <textarea> para las observaciones
+    contenedor = document.createElement("div");
+    span = document.createElement("span");
+    span.append("Observaciones");
+    textArea.setAttribute("id", "Observaciones");
+    contenedor.append(span, textArea);
+
+    form.append(contenedor);
+
+
+    // Botón de envío del form
+    enviar.setAttribute("id", "Enviar");
+    borrar.setAttribute("id", "Borrar");
+    enviar.append("Enviar");
+    borrar.append("Borrar Todo");
+
+    form.append(enviar, borrar);
+    eventos();
+}
+
+
+/**
+ * Pinta la tabla con las incidencias
+ */
+export function pintaTabla() {
+
+    let incidencias = localStorage.getItem("incidencias");
+
+    if (incidencias==null) {
+        incidencias = [];      
+    }else {
+        incidencias = JSON.parse(incidencias); 
+    }
+
+    // Evita que la tabla se imprima varias veces
+    let tablaOld = document.querySelector("#tabla-incidencias");
+    if (tablaOld!=null) {
+        tablaOld.remove();
+    }
+
+    let body = document.querySelector("body");
+    let primerEnlace = document.querySelector("#indexJS");
+    let tabla = document.createElement("table");
+    tabla.setAttribute("id", "tabla-incidencias");
+    let cabecera = document.createElement("tr");
+    let titulos = [
+        "Fecha Creación", 
+        "Usuario", 
+        "Teléfono", 
+        "Correo", 
+        "Responsable", 
+        "Tipo", 
+        "Prioridad", 
+        "Estado",
+        "Observaciones"
+    ];
+
+    // Crea las cabeceras de la tabla partiendo del array "titulos"
+    titulos.forEach((x) => {
+        let th = document.createElement("th");
+        th.append(x);
+        cabecera.append(th);
+    });
+
+    body.insertBefore(tabla, primerEnlace);
+    tabla.append(cabecera);
+
+
+    if (incidencias!=null) {
+
+        // Recorre el array de incidencias para imprimir cada incidencia
+        let ID = 1;
+        incidencias.forEach((incidencia)=>{ 
+            let fila = document.createElement("tr");
+            fila.setAttribute("id", ID);
+            ID++;
+            
+            Object.values(incidencia).forEach((value)=>{ // Por cada objeto del array, añade uno a uno cada valor a una columna de la tabla
+                let td = document.createElement("td");
+                td.append(value);
+                fila.append(td);
+            });
+
+            fila = crearBotones(fila);  
+            pintaFondos(fila, incidencia);
+            tabla.append(fila);
+        });
+    }
+
+    localStorage.setItem("incidencias", JSON.stringify(incidencias));
+
+} 
+
