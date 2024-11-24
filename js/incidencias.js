@@ -5,50 +5,48 @@
  */
 function ordenarFechaResol(incidencias) {
 
-    incidencias.forEach((x)=>{
-        let horas = 24;
+    const formatearFecha = (fecha) => {
+        const year = fecha.getFullYear();
+        const month = String(fecha.getMonth() + 1).padStart(2, '0'); // padStart() exige dos dígitos, si no los tiene, le agrega un 0 al inicio
+        const day = String(fecha.getDate()).padStart(2, '0');
+        const hours = String(fecha.getHours()).padStart(2, '0');
+        const minutes = String(fecha.getMinutes()).padStart(2, '0');
+        const seconds = String(fecha.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };
 
-        if (x.prioridad=="Baja") {
+    const calculaHoras = (prioridad)=>{
+        let horas = 24;
+        if (prioridad=="Baja") {
             horas = 168;
-        }else if(x.prioridad=="Media"){
+        }else if(prioridad=="Media"){
             horas = 48;
         }
+        return horas;
+    }
+
+    // Se sumas las horas correspondientes a cada incidencia
+    incidencias.forEach((x)=>{
+        let horas = calculaHoras(x.prioridad);
 
         let fecha = new Date(x.fechaCreacion);
         fecha.setHours(fecha.getHours()+horas);
-
-        let format = fecha.getFullYear() + "-" + (Number(fecha.getMonth())+1) + "-" + fecha.getDate();
     
-        fecha.getHours()<10 ? format += " 0" + fecha.getHours() : format += " " + fecha.getHours();
-        fecha.getMinutes()<10 ? format += ":0" + fecha.getHours() : format += ":" + fecha.getMinutes();
-        fecha.getSeconds()<10 ? format += ":0" + fecha.getSeconds() : format += ":" + fecha.getSeconds();
-    
-        x.fechaCreacion = format;
+        x.fechaCreacion = formatearFecha(fecha);
     });
 
+    // Se ordena con las nuevas fechas de forma ascendente
     incidencias.sort((a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion));
 
+    // Regresa cada incidencia al estado original; es decir, a la fecha con la que se creó
     incidencias.forEach((x)=>{
-        let horas = 24;
-
-        if (x.prioridad=="Baja") {
-            horas = 168;
-        }else if(x.prioridad=="Media"){
-            horas = 48;
-        }
+        let horas = calculaHoras(x.prioridad);
 
         let fecha = new Date(x.fechaCreacion);
         fecha.setHours(fecha.getHours()-horas);
-
-        let format = fecha.getFullYear() + "-" + (Number(fecha.getMonth())+1) + "-" + fecha.getDate();
     
-        fecha.getHours()<10 ? format += " 0" + fecha.getHours() : format += " " + fecha.getHours();
-        fecha.getMinutes()<10 ? format += ":0" + fecha.getHours() : format += ":" + fecha.getMinutes();
-        fecha.getSeconds()<10 ? format += ":0" + fecha.getSeconds() : format += ":" + fecha.getSeconds();
-    
-        x.fechaCreacion = format;
+        x.fechaCreacion = formatearFecha(fecha);
     });
-
 
     return incidencias;
 }
