@@ -208,15 +208,38 @@ function crearIncidencia() {
  */
 function validarDatos() {
     let valido = 1;
+    let vacio = 0;
     let datos = document.querySelector("#datos").querySelectorAll("input");
+    let usuario = document.querySelector("#Usuario");
+    let telefono = document.querySelector("#Telefono");
+    let expresion;
+    let errores = "ERRORES DETECTADOS\n";
+
+    // Comprueba que no hayan datos vacíos
     datos.forEach((x)=>{
         if (x.value=="") {
-            valido = 0;
+            vacio = 1;
         }
     });
 
-    if (!valido) {
+    // Comprueba que "usuario" no contenga números
+    expresion = /^[a-zA-Z]+$/;
+    if (!expresion.test(usuario.value)) {
+        valido = 0;
+        errores += "\nEL usuario debe contener solo letras";
+    }
+
+    // Comprueba que "telefono" no contenga letras y tenga 9 dígitos
+    expresion = /^[0-9]{9}$/;
+    if (!expresion.test(telefono.value)) {
+        valido = 0;
+        errores += "\nEL Nº de teléfono debe contener solo números y 9 dígitos";
+    }
+
+    if (vacio) {
         alert("Todavía hay datos vacíos");
+    }else if (!valido) {
+        alert(errores);
     }else {
         crearIncidencia();
     }
