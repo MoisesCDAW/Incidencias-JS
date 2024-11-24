@@ -1,18 +1,63 @@
 
+
 /**
- * Objeto que guarda el tiempo límite en horas de resolución para cada nivel de prioridad
+ * Ordena el array según fecha de resolución y según la prioridad
  */
-const tiempoLimite = {
-    urgente: 24,
-    media: 48,
-    baja: 168 // 7 días en horas
+function ordenarFechaResol(incidencias) {
+
+    incidencias.forEach((x)=>{
+        let horas = 24;
+
+        if (x.prioridad=="Baja") {
+            horas = 168;
+        }else if(x.prioridad=="Media"){
+            horas = 48;
+        }
+
+        let fecha = new Date(x.fechaCreacion);
+        fecha.setHours(fecha.getHours()+horas);
+
+        let format = fecha.getFullYear() + "-" + (Number(fecha.getMonth())+1) + "-" + fecha.getDate();
+    
+        fecha.getHours()<10 ? format += " 0" + fecha.getHours() : format += " " + fecha.getHours();
+        fecha.getMinutes()<10 ? format += ":0" + fecha.getHours() : format += ":" + fecha.getMinutes();
+        fecha.getSeconds()<10 ? format += ":0" + fecha.getSeconds() : format += ":" + fecha.getSeconds();
+    
+        x.fechaCreacion = format;
+    });
+
+    incidencias.sort((a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion));
+
+    incidencias.forEach((x)=>{
+        let horas = 24;
+
+        if (x.prioridad=="Baja") {
+            horas = 168;
+        }else if(x.prioridad=="Media"){
+            horas = 48;
+        }
+
+        let fecha = new Date(x.fechaCreacion);
+        fecha.setHours(fecha.getHours()-horas);
+
+        let format = fecha.getFullYear() + "-" + (Number(fecha.getMonth())+1) + "-" + fecha.getDate();
+    
+        fecha.getHours()<10 ? format += " 0" + fecha.getHours() : format += " " + fecha.getHours();
+        fecha.getMinutes()<10 ? format += ":0" + fecha.getHours() : format += ":" + fecha.getMinutes();
+        fecha.getSeconds()<10 ? format += ":0" + fecha.getSeconds() : format += ":" + fecha.getSeconds();
+    
+        x.fechaCreacion = format;
+    });
+
+
+    return incidencias;
 }
 
 
 /**
  * Guarda la nueva incidencia en LocalStorage
  */
-export function guardarIncidencia(incidencia, posicion=null, nuevoEstado) {
+function guardarIncidencia(incidencia, posicion=null, nuevoEstado) {
     let incidencias = localStorage.getItem("incidencias");
     
     if (incidencias==null) {
@@ -31,6 +76,7 @@ export function guardarIncidencia(incidencia, posicion=null, nuevoEstado) {
     }
 
     localStorage.setItem("incidencias", JSON.stringify(incidencias));
+    pintaTabla();
 
 }
 
@@ -71,7 +117,7 @@ function pintaFondos(fila, incidencia) {
 /**
  * Crea los botones para una fila y le asigna los eventos
  */
-export function crearBotones(fila) {
+function crearBotones(fila) {
     let enProceso = document.createElement("button");
     let finalizada = document.createElement("button");
 
@@ -117,37 +163,9 @@ export function crearBotones(fila) {
 
 
 /**
- * Pinta la tabla con las incidencias
- */
-export function crearFila(incidencia) {
-    let ID = null;
-    let tabla = document.querySelector("#tabla-incidencias");
-    let ultimaFila = Array.from(tabla.querySelectorAll("tr"));
-    ultimaFila = ultimaFila[ultimaFila.length-1];
-    
-    ID = Number(ultimaFila.id)+1;
-
-    let fila = document.createElement("tr");
-    fila.setAttribute("id", ID);
-
-    // Agrega cada atributo del objeto a una columna de la nueva fila de la tabla
-    Object.values(incidencia).forEach((value)=>{
-        let td = document.createElement("td");
-        td.append(value);
-        fila.append(td);
-    });
-
-    fila = crearBotones(fila);
-    fila = pintaFondos(fila, incidencia);
-
-    tabla.append(fila);
-}
-
-
-/**
  * Crea un objeto con toda la información de la incidencia
  */
-export function crearIncidencia() {
+function crearIncidencia() {
     let incidencia = {
         fechaCreacion: "null",
         nombre: document.querySelector("#Usuario").value,
@@ -164,7 +182,7 @@ export function crearIncidencia() {
 
     // Formatea un objeto Date
     let date = new Date();
-    let format = date.getDate() + "/" + date.getMonth() + "/" + date.getFullYear();
+    let format = date.getFullYear() + "-" + (Number(date.getMonth())+1) + "-" + date.getDate();
     
     date.getHours()<10 ? format += " 0" + date.getHours() : format += " " + date.getHours();
     date.getMinutes()<10 ? format += ":0" + date.getHours() : format += ":" + date.getMinutes();
@@ -184,7 +202,6 @@ export function crearIncidencia() {
     });
 
     guardarIncidencia(incidencia);
-    return incidencia;
 }
 
 
@@ -203,7 +220,7 @@ function validarDatos() {
     if (!valido) {
         alert("Todavía hay datos vacíos");
     }else {
-        crearFila(crearIncidencia());
+        crearIncidencia();
     }
 }
 
@@ -380,6 +397,9 @@ export function pintaTabla() {
 
     if (incidencias!=null) {
 
+        // Ordena el array según fecha de resolución
+        incidencias = ordenarFechaResol(incidencias);
+
         // Recorre el array de incidencias para imprimir cada incidencia
         let ID = 1;
         incidencias.forEach((incidencia)=>{ 
@@ -400,6 +420,5 @@ export function pintaTabla() {
     }
 
     localStorage.setItem("incidencias", JSON.stringify(incidencias));
-
 } 
 
